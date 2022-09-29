@@ -11,48 +11,20 @@ PKG_RELEASE:=0
 
 PKG_LICENSE:=GPLv2
 PKG_MAINTAINER:=kongfl888
-PKG_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)
 
-include $(INCLUDE_DIR)/package.mk
-
-define Package/luci-app-my-dnshelper
-	SECTION:=luci
-	CATEGORY:=LuCI
-	SUBMENU:=3. Applications
-	TITLE:=luci-app-my-dnshelper
-	PKG_MAINTAINER:=K
-	PKGARCH:=all
-endef
-
-define Package/luci-app-my-dnshelper/description
-	luci-app-my-dnshelper
-endef
-
-define Build/Prepare
-endef
-
-define Build/Compile
-endef
+LUCI_TITLE:=LuCI App for my-dnshelper which is a helper of dnsmasq.
+LUCI_PKGARCH:=all
+#LUCI_DEPENDS:=+dnsmasq-full
 
 define Package/$(PKG_NAME)/conffiles
 /etc/config/my-dnshelper
 /etc/my-dnshelper/
 endef
 
-define Package/$(PKG_NAME)/install
-    $(INSTALL_DIR) $(1)/www
-	cp -pR ./htdocs/* $(1)/www
-	$(INSTALL_DIR) $(1)/
-	cp -pR ./root/* $(1)/
-	$(INSTALL_DIR) $(1)/usr/lib/lua/luci/i18n
-	po2lmo ./po/zh-Hans/my-dnshelper.po $(1)/usr/lib/lua/luci/i18n/my-dnshelper.zh-cn.lmo
-endef
-
 define Package/$(PKG_NAME)/postinst
 #!/bin/sh
 	chmod a+x ${IPKG_INSTROOT}/etc/init.d/my-dnshelper >/dev/null 2>&1 || echo ""
 	chmod a+x ${IPKG_INSTROOT}/usr/share/my-dnshelper/* >/dev/null 2>&1 || echo ""
-	chmod a+x ${IPKG_INSTROOT}/usr/bin/my-dnshelper >/dev/null 2>&1 || echo ""
 	exit 0
 endef
 
@@ -71,4 +43,6 @@ define Package/$(PKG_NAME)/postrm
 	exit 0
 endef
 
-$(eval $(call BuildPackage,$(PKG_NAME)))
+include $(TOPDIR)/feeds/luci/luci.mk
+
+# call BuildPackage - OpenWrt buildroot signature
