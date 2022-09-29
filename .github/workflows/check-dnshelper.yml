@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'luci-app-my-dnshelper/**'
+      - '.github/workflows/check-dnshelper.yml'
+      - '.github/workflows/build-test.sh'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: Build the IPK
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Docker Build
+      run: |
+        mkdir bin
+        PKG_DIR=luci-app-my-dnshelper
+        cp -rf ./${PKG_DIR} ./bin/
+        docker pull openwrtorg/sdk:x86-64-21.02-SNAPSHOT
+        docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
+    - name: Upload app
+      uses: actions/upload-artifact@v2
+      with:
+        name: luci-app-my-dnshelper
+        path: ./bin/packages/x86_64/base/*my-dnshelper*
+        if-no-files-found: error
+    - name: Upload Log
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v2
+      with:
+        name: buildlog
+        path: bin/logs.tar.xz

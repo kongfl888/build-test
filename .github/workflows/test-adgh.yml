@@ -1,0 +1,82 @@
+name: build adgh
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/test-adgh.yml'
+      - './adgh/*'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: build
+        id: build_ipk
+        run: |
+          PKGNAME="luci-app-adguardhome"
+          PKGNAME_SHORT="AdGuardHome"
+          echo "##[set-output name=pkg_name;]$PKGNAME"
+          mkdir -p /tmp/$PKGNAME/
+          rm -rf /tmp/$PKGNAME/*
+          git clone -b master https://github.com/kongfl888/luci-app-adguardhome.git
+          PKG_WORKSPACE=$GITHUB_WORKSPACE/$PKGNAME
+          mkdir -p /tmp/$PKGNAME/usr/lib/lua/luci /tmp/$PKGNAME/www/
+          [ -d $PKG_WORKSPACE/luasrc ] && cp -R $PKG_WORKSPACE/luasrc/* /tmp/$PKGNAME/usr/lib/lua/luci/
+          [ -d $PKG_WORKSPACE/root ] && cp -R $PKG_WORKSPACE/root/* /tmp/$PKGNAME/
+          [ -d $PKG_WORKSPACE/htdocs ] && cp -R $PKG_WORKSPACE/htdocs/* /tmp/$PKGNAME/www/
+          [ -d $PKG_WORKSPACE/po ] && sudo -E apt-get -y install gcc make sha256sum && \
+          mkdir -p /tmp/po2lmo && mkdir -p /tmp/$PKGNAME/usr/lib/lua/luci/i18n/ && \
+          wget -O /tmp/po2lmo/po2lmo.c https://raw.githubusercontent.com/openwrt/luci/openwrt-18.06/modules/luci-base/src/po2lmo.c && \
+          wget -O /tmp/po2lmo/Makefile https://raw.githubusercontent.com/openwrt/luci/openwrt-18.06/modules/luci-base/src/Makefile && \
+          wget -O /tmp/po2lmo/template_lmo.h https://raw.githubusercontent.com/openwrt/luci/openwrt-18.06/modules/luci-base/src/template_lmo.h && \
+          wget -O /tmp/po2lmo/template_lmo.c https://raw.githubusercontent.com/openwrt/luci/openwrt-18.06/modules/luci-base/src/template_lmo.c && \
+          cd /tmp/po2lmo && make po2lmo && \
+          ./po2lmo $PKG_WORKSPACE/po/zh-cn/$PKGNAME_SHORT.po /tmp/$PKGNAME/usr/lib/lua/luci/i18n/$PKGNAME_SHORT.zh-cn.lmo
+          mkdir -p /tmp/$PKGNAME/CONTROL
+          cat >/tmp/$PKGNAME/CONTROL/control <<EOF
+          Package: ${PKGNAME}
+          Version: 1.8-$(date +%Y%m%d)k
+          Depends: libc
+          Architecture: all
+          Maintainer: kongfl888<kongfl888@outlook.com>
+          Section: luci
+          Description: Luci app for AdGuardHome
+          EOF
+          cp -R $GITHUB_WORKSPACE/adgh/CONTROL/* /tmp/$PKGNAME/CONTROL/
+          chmod +x /tmp/$PKGNAME/CONTROL/conffiles
+          chmod +x /tmp/$PKGNAME/CONTROL/postinst
+          chmod +x /tmp/$PKGNAME/CONTROL/postinst-pkg
+          chmod +x /tmp/$PKGNAME/CONTROL/prerm
+          chmod +x /tmp/$PKGNAME/CONTROL/prerm-pkg
+          wget -O /tmp/ipkg-build https://raw.githubusercontent.com/openwrt/openwrt/v19.07.1/scripts/ipkg-build && \
+          chmod +x /tmp/ipkg-build && \
+          /tmp/ipkg-build -o root -g root /tmp/$PKGNAME /tmp
+      - name: Assemble Artifact
+        id: assemble_artifact
+        run: |
+          rm -rf ./artifact/
+          mkdir -p ./artifact/
+          cp /tmp/${{ steps.build_ipk.outputs.pkg_name }}*.ipk ./artifact/
+          cd ./artifact/
+          sha256sum *ipk* > sha256sum.txt
+          cd ..
+          zip -r artifact.zip ./artifact/
+          release_tag="${{ steps.build_ipk.outputs.pkg_name }}-$(date +%Y-%m-%d-%H-%M)"
+          echo "##[set-output name=release_tag;]$release_tag"
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ steps.assemble_artifact.outputs.release_tag }}.zip
+          path: ./artifact.zip
