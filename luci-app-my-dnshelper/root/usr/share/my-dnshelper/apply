@@ -1,0 +1,32 @@
+#!/bin/sh
+# [K]2022
+# https://github.com/kongfl888
+
+Logfile="/tmp/my-dnshelper.log"
+
+#sleep 6s
+
+getMd5(){
+	local smd5=`md5sum /etc/config/my-dnshelper | awk '{ print $1 }'`
+	echo $smd5
+}
+
+ut0=$(getMd5)
+
+sleep 6s
+
+num=0
+while [ $num -lt 15 ]
+do
+	sleep 1s
+	let num+=1
+	ut1=$(getMd5)
+	#echo $ut1
+	if [ $ut0 != $ut1 ]; then
+		break
+	fi
+done
+
+/etc/init.d/my-dnshelper restart
+
+exit 0

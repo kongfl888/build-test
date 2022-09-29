@@ -1,0 +1,27 @@
+#!/bin/sh
+uci -q batch <<-EOF >/dev/null
+	delete ucitrack.@my-dnshelper[-1]
+	add ucitrack my-dnshelper
+	set ucitrack.@my-dnshelper[-1].init=my-dnshelper
+	commit ucitrack
+	delete firewall.my-dnshelper
+	set firewall.my-dnshelper=include
+	set firewall.my-dnshelper.type=script
+	set firewall.my-dnshelper.path=/var/etc/my-dnshelper.include
+	set firewall.my-dnshelper.reload=1
+	commit firewall
+EOF
+
+chmod 0774 /etc/init.d/my-dnshelper >/dev/null 2>&1
+if [ -f /usr/bin/my-dnshelper ];then
+chmod 0774 /usr/bin/my-dnshelper  >/dev/null 2>&1
+else
+echo "`date -R` /usr/bin/my-dnshelper not found!" >> /tmp/my-dnshelper.log
+fi
+chmod 0774 /usr/share/my-dnshelper/* >/dev/null 2>&1
+chmod 0664 /etc/my-dnshelper/* >/dev/null 2>&1
+chmod 0664 /etc/config/my-dnshelper >/dev/null 2>&1
+/etc/init.d/my-dnshelper enable  >/dev/null 2>&1
+/etc/init.d/rpcd reload >/dev/null 2>&1
+rm -rf /tmp/luci-*
+exit 0
