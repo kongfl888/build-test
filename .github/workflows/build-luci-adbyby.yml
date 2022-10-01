@@ -1,0 +1,44 @@
+name: build adgh
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/build-luci-adbyby.yml'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: build
+        id: build_ipk
+        run: |
+          git clone -m master https://github.com/kongfl888/lean-luci.git
+          mkdir bin
+          PKG_DIR=luci-app-adbyby-plus
+          cp ./applications/${PKG_DIR} ./bin/
+          docker pull openwrtorg/sdk:x86-64-21.02-SNAPSHOT
+          docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
+        - name: Upload app
+          uses: actions/upload-artifact@v2
+          with:
+            name: pack
+            path: ./bin/packages/x86_64/base/*adbyby*
+            if-no-files-found: error
+        - name: Upload Log
+          if: ${{ always() }}
+          uses: actions/upload-artifact@v2
+          with:
+            name: buildlog
+            path: bin/logs.tar.xz
