@@ -19,10 +19,12 @@ jobs:
       uses: actions/checkout@master
     - name: Docker Build
       run: |
-        git clone -m master https://github.com/kongfl888/lean-luci.git
+        git clone -b master https://github.com/kongfl888/lean-luci.git
         mkdir bin
         PKG_DIR=luci-app-adbyby-plus
         cp -rf ./lean-luci/applications/${PKG_DIR} ./bin/
+        sed -i '/LUCI_DEPENDS/d' ./bin/${PKG_DIR}/Makefile
+        sed -i 's/include ..\/..\/luci.mk/include $(TOPDIR)\/feeds\/luci\/luci.mk/' ./bin/${PKG_DIR}/Makefile
         docker pull openwrtorg/sdk:x86-64-21.02-SNAPSHOT
         docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
     - name: Upload app
