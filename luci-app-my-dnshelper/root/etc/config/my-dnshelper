@@ -1,8 +1,0 @@
-
-config my-dnshelper
-	option enable '0'
-	option autoupdate '1'
-	option time_update '12'
-	option flash '0'
-	option use_doh '0'
-	option force_ip4 '1'
