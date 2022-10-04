@@ -22,7 +22,7 @@ jobs:
         git clone --single-branch https://github.com/kongfl888/luci-app-adbyby-plus-lite.git
         mkdir bin
         PKG_DIR=luci-app-adbyby-plus
-        rm -rf ./luci-app-adbyby-plus-lite/${PKG_DIR}/zh_Hans
+        rm -rf ./luci-app-adbyby-plus-lite/${PKG_DIR}/po/zh_Hans
         cp -rf ./luci-app-adbyby-plus-lite/${PKG_DIR} ./bin/
         sed -i '/LUCI_DEPENDS/d' ./bin/${PKG_DIR}/Makefile
         sed -i 's/include ..\/..\/luci.mk/include $(TOPDIR)\/feeds\/luci\/luci.mk/' ./bin/${PKG_DIR}/Makefile
