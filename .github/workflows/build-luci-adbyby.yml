@@ -19,7 +19,7 @@ jobs:
       uses: actions/checkout@master
     - name: Docker Build
       run: |
-        git clone -b master https://github.com/kongfl888/luci-app-adbyby-plus-lite.git
+        git clone --single-branch https://github.com/kongfl888/luci-app-adbyby-plus-lite.git
         mkdir bin
         PKG_DIR=luci-app-adbyby-plus
         cp -rf ./luci-app-adbyby-plus-lite/${PKG_DIR} ./bin/
