@@ -17,28 +17,28 @@ jobs:
     name: Build the IPK
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@master
-    - name: Docker Build
-      run: |
-        git clone --single-branch https://github.com/kongfl888/openwrt-my-dnshelper.git
-        mkdir bin
-        PKG_DIR=my-dnshelper
-        cp -rf ./openwrt-my-dnshelper/${PKG_DIR} ./bin/
-        docker pull openwrtorg/sdk:x86-64-21.02-SNAPSHOT
-        docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
-        PKG_DIR=luci-app-my-dnshelper
-        cp -rf ./openwrt-my-dnshelper/${PKG_DIR} ./bin/
-        docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
-    - name: Upload app
-      uses: actions/upload-artifact@v2
-      with:
-        name: pack
-        path: ./bin/packages/x86_64/base/*dnshelper*
-        if-no-files-found: error
-    - name: Upload Log
-      if: ${{ always() }}
-      uses: actions/upload-artifact@v2
-      with:
-        name: buildlog
-        path: bin/logs.tar.xz
+      - name: Checkout
+        uses: actions/checkout@main
+      - name: Docker Build
+        run: |
+          git clone --single-branch https://github.com/kongfl888/openwrt-my-dnshelper.git
+          mkdir bin
+          PKG_DIR=my-dnshelper
+          cp -rf ./openwrt-my-dnshelper/${PKG_DIR} ./bin/
+          docker pull openwrtorg/sdk:x86-64-21.02-SNAPSHOT
+          docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
+          PKG_DIR=luci-app-my-dnshelper
+          cp -rf ./openwrt-my-dnshelper/${PKG_DIR} ./bin/
+          docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
+      - name: Upload app
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: pack
+          path: ./bin/packages/x86_64/base/*dnshelper*
+          if-no-files-found: error
+      - name: Upload Log
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: buildlog
+          path: bin/logs.tar.xz
