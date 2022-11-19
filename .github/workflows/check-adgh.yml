@@ -24,7 +24,8 @@ jobs:
         mkdir bin
         PKG_DIR=luci-app-adguardhome
         cp -rf ./${PKG_DIR} ./bin/
-        sed -i '/LUCI_DEPENDS/d' ./bin/${PKG_DIR}/Makefile
+        #sed -i '/LUCI_DEPENDS/d' ./bin/${PKG_DIR}/Makefile
+        sed -i 's/20221023/20221120/' ./bin/${PKG_DIR}/Makefile
         sed -i 's/include ..\/..\/luci.mk/include $(TOPDIR)\/feeds\/luci\/luci.mk/' ./bin/${PKG_DIR}/Makefile
         docker pull openwrtorg/sdk:x86-64-21.02-SNAPSHOT
         docker run --rm -u root -v "$(pwd)"/bin/:/home/build/openwrt/bin -v ${{ github.workspace }}/.github/workflows:/home/build/workflows openwrtorg/sdk:x86-64-21.02-SNAPSHOT /bin/sh /home/build/workflows/build-test.sh ${PKG_DIR}
