@@ -32,7 +32,7 @@ jobs:
         run: |
           rm -rf ./artifact/
           mkdir -p ./artifact/
-          cp /tmp/mmj-assets ./artifact/
+          cp -rf /tmp/mmj-assets ./artifact/
           cd ./artifact/
           cd ..
           zip -r artifact.zip ./artifact/
