@@ -1,0 +1,45 @@
+name: git
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/get-mmjshader.yml'
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+    if: github.event.repository.owner.id == github.event.sender.id
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          ref: main
+
+      - name: get
+        id: get_files
+        run: |
+          git clone -b master https://github.com/weihuoya/citra.git
+          cd citra
+          cp -rf ./src/android/app/src/main/assets /tmp/mmj-assets/
+      - name: Assemble Artifact
+        id: assemble_artifact
+        run: |
+          rm -rf ./artifact/
+          mkdir -p ./artifact/
+          cp /tmp/mmj-assets ./artifact/
+          cd ./artifact/
+          cd ..
+          zip -r artifact.zip ./artifact/
+          release_tag="mmj-assets-$(date +%Y-%m-%d-%H-%M)"
+          echo "##[set-output name=release_tag;]$release_tag"
+      - name: Upload Artifact
+        uses: actions/upload-artifact@main
+        with:
+          name: ${{ steps.assemble_artifact.outputs.release_tag }}.zip
+          path: ./artifact.zip
